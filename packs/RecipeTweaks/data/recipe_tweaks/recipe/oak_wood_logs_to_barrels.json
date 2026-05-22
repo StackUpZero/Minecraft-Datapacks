@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "L L",
+    "L L",
+    "L L"
+  ],
+  "key": {
+    "L": "minecraft:oak_wood"
+  },
+  "result": {
+    "id": "minecraft:barrel",
+    "count": 4
+  }
+}

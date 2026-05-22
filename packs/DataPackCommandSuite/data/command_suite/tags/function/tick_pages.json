@@ -1,12 +1,11 @@
 {
   "values": [
-    "command_suite:triggers/custom_day_cycle/tick",
-    "command_suite:triggers/general/tick",
     "command_suite:triggers/welcome_pack/tick",
     "command_suite:triggers/ore_tracker/tick",
     "command_suite:triggers/timber/tick",
     "command_suite:triggers/recipe_tweaks/tick",
     "command_suite:triggers/wood_cutter/tick",
-    "command_suite:triggers/ore_veinminer/tick"
+    "command_suite:triggers/ore_veinminer/tick",
+    "command_suite:triggers/mob_kill_tracker/tick"
   ]
 }

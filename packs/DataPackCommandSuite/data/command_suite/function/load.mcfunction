@@ -6,8 +6,6 @@ function command_suite:triggers/ore_tracker/load
 
 
 # BEGIN DPCS MANAGED TRIGGER LOADS
-function command_suite:triggers/custom_day_cycle/load
-function command_suite:triggers/general/load
 function command_suite:triggers/welcome_pack/load
 function command_suite:triggers/ore_tracker/load
 # END DPCS MANAGED TRIGGER LOADS
@@ -25,3 +23,6 @@ function command_suite:triggers/wood_cutter/load
 
 # OreVeinMiner DPSuite trigger
 function command_suite:triggers/ore_veinminer/load
+
+# MobKillTracker DPSuite trigger
+function command_suite:triggers/mob_kill_tracker/load

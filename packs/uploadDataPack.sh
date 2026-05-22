@@ -1,126 +1,169 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Patch OreVeinMiner book detection:
-# - crafted VeinMiner Book
-# - real VeinMiner enchanted book
-# - creative/command enchanted book
-# - fallback: any enchanted_book if specific checks fail
+# Clean DPCS permissions/layout:
+# - Main DPCS becomes normal-player safe
+# - Removes CustomDayCycle + General from public DPCS menu
+# - Disables public trigger pages for CustomDayCycle + General
+# - Adds operator/admin page accessible by:
+#     /function command_suite:pages/admin
+# - Simplifies Timber/OreVeinMiner pages to apply commands only
 #
 # Run from:
 # ~/Projects/MInecraft Datapacks/packs
 
-PACK_NAME="OreVeinMiner"
-PACK_NS="ore_veinminer"
+DPCSUITE="DataPackCommandSuite"
 
-echo "Patching OreVeinMiner book detection..."
+echo "Splitting DPCS into normal and admin command pages..."
 
-if [[ ! -d "$PACK_NAME/data/$PACK_NS/function" ]]; then
-  echo "ERROR: Missing $PACK_NAME/data/$PACK_NS/function"
+if [[ ! -d "$DPCSUITE/data/command_suite" ]]; then
+  echo "ERROR: Missing $DPCSUITE/data/command_suite"
   echo "Run from: ~/Projects/MInecraft Datapacks/packs"
   exit 1
 fi
 
 mkdir -p \
-  "$PACK_NAME/data/$PACK_NS/function/apply" \
-  "$PACK_NAME/data/$PACK_NS/item_modifier"
+  "$DPCSUITE/data/command_suite/function/pages" \
+  "$DPCSUITE/data/command_suite/function/entries" \
+  "$DPCSUITE/data/command_suite/tags/function"
 
 # -----------------------------
-# Apply function
+# Remove admin-ish pages from public DPCS menu + trigger tags
 # -----------------------------
 
-cat > "$PACK_NAME/data/$PACK_NS/function/apply/run.mcfunction" <<'EOF'
-tellraw @s {"text":"OreVeinMiner apply started.","color":"dark_aqua"}
+python - <<'PY'
+import json
+from pathlib import Path
 
-scoreboard players set @s ovm.apply 0
-scoreboard players set @s ovm.held 0
+remove_values = {
+    "command_suite:entries/custom_day_cycle",
+    "command_suite:entries/general",
 
-function ore_veinminer:apply/check_held_pickaxe
+    "command_suite:triggers/custom_day_cycle/load",
+    "command_suite:triggers/custom_day_cycle/tick",
 
-execute unless score @s ovm.held matches 1.. run tellraw @s {"text":"Hold a pickaxe in your main hand first.","color":"red"}
-execute unless score @s ovm.held matches 1.. run return fail
+    "command_suite:triggers/general/load",
+    "command_suite:triggers/general/tick",
+}
 
-# Book detection priority:
-# 1 = crafted VeinMiner Book
-# 2 = real VeinMiner enchanted book
-# 3 = fallback any enchanted book
+files = [
+    Path("DataPackCommandSuite/data/command_suite/tags/function/menu_entries.json"),
+    Path("DataPackCommandSuite/data/command_suite/tags/function/load_pages.json"),
+    Path("DataPackCommandSuite/data/command_suite/tags/function/tick_pages.json"),
+]
 
-execute store result score #crafted ovm.apply run clear @s minecraft:enchanted_book[minecraft:custom_data~{ovm_book:1}] 0
-execute if score #crafted ovm.apply matches 1.. run scoreboard players set @s ovm.apply 1
+for path in files:
+    if not path.exists():
+        continue
 
-execute unless score @s ovm.apply matches 1.. store result score #real ovm.apply run clear @s minecraft:enchanted_book[minecraft:stored_enchantments~[{enchantments:"ore_veinminer:veinminer"}]] 0
-execute unless score @s ovm.apply matches 1.. if score #real ovm.apply matches 1.. run scoreboard players set @s ovm.apply 2
+    data = json.loads(path.read_text())
+    data["values"] = [v for v in data.get("values", []) if v not in remove_values]
+    path.write_text(json.dumps(data, indent=2) + "\n")
+PY
 
-execute unless score @s ovm.apply matches 1.. store result score #anybook ovm.apply run clear @s minecraft:enchanted_book 0
-execute unless score @s ovm.apply matches 1.. if score #anybook ovm.apply matches 1.. run scoreboard players set @s ovm.apply 3
+# Remove direct trigger calls from DPCS load/tick if present.
+for file in \
+  "$DPCSUITE/data/command_suite/function/load.mcfunction" \
+  "$DPCSUITE/data/command_suite/function/tick.mcfunction"
+do
+  if [[ -f "$file" ]]; then
+    sed -i '/command_suite:triggers\/custom_day_cycle\/load/d' "$file"
+    sed -i '/command_suite:triggers\/custom_day_cycle\/tick/d' "$file"
+    sed -i '/command_suite:triggers\/general\/load/d' "$file"
+    sed -i '/command_suite:triggers\/general\/tick/d' "$file"
 
-execute unless score @s ovm.apply matches 1.. run tellraw @s {"text":"You need a VeinMiner Book or enchanted book in your inventory.","color":"red"}
-execute unless score @s ovm.apply matches 1.. run return fail
+    sed -i '/CustomDayCycle DPSuite trigger/d' "$file"
+    sed -i '/General DPSuite trigger/d' "$file"
+  fi
+done
 
-execute if items entity @s weapon.mainhand *[minecraft:enchantments~[{enchantments:"ore_veinminer:veinminer"}]] run tellraw @s {"text":"That pickaxe already has the real VeinMiner enchantment.","color":"yellow"}
-execute if items entity @s weapon.mainhand *[minecraft:enchantments~[{enchantments:"ore_veinminer:veinminer"}]] run return fail
+# -----------------------------
+# Public Timber page: apply only
+# -----------------------------
 
-execute if entity @s[nbt={SelectedItem:{components:{"minecraft:custom_data":{ore_veinminer:1b}}}}] run tellraw @s {"text":"That pickaxe already has stable VeinMiner.","color":"yellow"}
-execute if entity @s[nbt={SelectedItem:{components:{"minecraft:custom_data":{ore_veinminer:1b}}}}] run return fail
+cat > "$DPCSUITE/data/command_suite/function/pages/timber.mcfunction" <<'EOF'
+tellraw @s {"text":""}
+tellraw @s {"text":"========== Timber ==========","color":"green","bold":true}
+tellraw @s {"text":"Apply Timber to the axe in your main hand.","color":"gray"}
+tellraw @s {"text":""}
 
-# Consume the matching book type.
-execute if score @s ovm.apply matches 1 run clear @s minecraft:enchanted_book[minecraft:custom_data~{ovm_book:1}] 1
-execute if score @s ovm.apply matches 2 run clear @s minecraft:enchanted_book[minecraft:stored_enchantments~[{enchantments:"ore_veinminer:veinminer"}]] 1
-execute if score @s ovm.apply matches 3 run clear @s minecraft:enchanted_book 1
+tellraw @s {"text":"Requires: Timber Book in your inventory.","color":"gray"}
+tellraw @s [{"text":"Apply Timber: ","color":"white"},{"text":"/trigger timber_apply","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger timber_apply"},"hover_event":{"action":"show_text","value":"Apply Timber to held axe"}}]
 
-execute if score @s ovm.apply matches 1 run tellraw @s {"text":"Crafted VeinMiner Book consumed.","color":"gray"}
-execute if score @s ovm.apply matches 2 run tellraw @s {"text":"Real VeinMiner enchanted book consumed.","color":"gray"}
-execute if score @s ovm.apply matches 3 run tellraw @s {"text":"Generic enchanted book consumed as fallback.","color":"yellow"}
+tellraw @s {"text":""}
+tellraw @s [{"text":"← Back to datapack list","color":"yellow","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcsuite"},"hover_event":{"action":"show_text","value":"Click to go back"}}]
+tellraw @s {"text":"============================","color":"green"}
+EOF
 
-tellraw @s {"text":"Trying real enchant...","color":"gray"}
-enchant @s ore_veinminer:veinminer 1
-
-execute if items entity @s weapon.mainhand *[minecraft:enchantments~[{enchantments:"ore_veinminer:veinminer"}]] run tellraw @s {"text":"Real VeinMiner enchantment applied.","color":"green"}
-execute if items entity @s weapon.mainhand *[minecraft:enchantments~[{enchantments:"ore_veinminer:veinminer"}]] run return 1
-
-tellraw @s {"text":"Real enchant did not apply. Applying stable fallback marker...","color":"yellow"}
-item modify entity @s weapon.mainhand ore_veinminer:apply_fake_veinminer
-tellraw @s {"text":"Stable VeinMiner applied. Sneak-mine an ore to test.","color":"green"}
+cat > "$DPCSUITE/data/command_suite/function/entries/timber.mcfunction" <<'EOF'
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"Timber","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_tim"},"hover_event":{"action":"show_text","value":"Open Timber apply command"}},{"text":" - apply Timber to held axe","color":"gray"}]
 EOF
 
 # -----------------------------
-# Debug function
+# Public OreVeinMiner page: apply only
 # -----------------------------
 
-cat > "$PACK_NAME/data/$PACK_NS/function/apply/debug.mcfunction" <<'EOF'
+cat > "$DPCSUITE/data/command_suite/function/pages/ore_veinminer.mcfunction" <<'EOF'
 tellraw @s {"text":""}
-tellraw @s {"text":"========== OreVeinMiner Apply Debug ==========","color":"dark_aqua","bold":true}
+tellraw @s {"text":"========== OreVeinMiner ==========","color":"dark_aqua","bold":true}
+tellraw @s {"text":"Apply VeinMiner to the pickaxe in your main hand.","color":"gray"}
+tellraw @s {"text":""}
 
-scoreboard players set @s ovm.held 0
-function ore_veinminer:apply/check_held_pickaxe
+tellraw @s {"text":"Requires: VeinMiner Book in your inventory.","color":"gray"}
+tellraw @s [{"text":"Apply VeinMiner: ","color":"white"},{"text":"/trigger ovm_apply","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger ovm_apply"},"hover_event":{"action":"show_text","value":"Apply VeinMiner to held pickaxe"}}]
 
-execute if score @s ovm.held matches 1.. run tellraw @s {"text":"Held item: pickaxe detected","color":"green"}
-execute unless score @s ovm.held matches 1.. run tellraw @s {"text":"Held item: NOT a pickaxe","color":"red"}
+tellraw @s {"text":""}
+tellraw @s [{"text":"← Back to datapack list","color":"yellow","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcsuite"},"hover_event":{"action":"show_text","value":"Click to go back"}}]
+tellraw @s {"text":"================================","color":"dark_aqua"}
+EOF
 
-execute store result score #crafted ovm.apply run clear @s minecraft:enchanted_book[minecraft:custom_data~{ovm_book:1}] 0
-tellraw @s [{"text":"Crafted VeinMiner Books found: ","color":"gray"},{"score":{"name":"#crafted","objective":"ovm.apply"}}]
+cat > "$DPCSUITE/data/command_suite/function/entries/ore_veinminer.mcfunction" <<'EOF'
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"OreVeinMiner","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_ovm"},"hover_event":{"action":"show_text","value":"Open OreVeinMiner apply command"}},{"text":" - apply VeinMiner to held pickaxe","color":"gray"}]
+EOF
 
-execute store result score #real ovm.apply run clear @s minecraft:enchanted_book[minecraft:stored_enchantments~[{enchantments:"ore_veinminer:veinminer"}]] 0
-tellraw @s [{"text":"Real VeinMiner Books found: ","color":"gray"},{"score":{"name":"#real","objective":"ovm.apply"}}]
+# -----------------------------
+# Admin page
+# Operator-only in practice because it is opened with /function.
+# Non-ops should not be able to run /function on a normal server.
+# -----------------------------
 
-execute store result score #anybook ovm.apply run clear @s minecraft:enchanted_book 0
-tellraw @s [{"text":"Any enchanted books found: ","color":"gray"},{"score":{"name":"#anybook","objective":"ovm.apply"}}]
+cat > "$DPCSUITE/data/command_suite/function/pages/admin.mcfunction" <<'EOF'
+tellraw @s {"text":""}
+tellraw @s {"text":"========== DPCS ADMIN ==========","color":"red","bold":true}
+tellraw @s {"text":"Operator/debug/cheaty commands. Open with /function command_suite:pages/admin","color":"gray"}
+tellraw @s {"text":""}
 
-execute if items entity @s weapon.mainhand *[minecraft:enchantments~[{enchantments:"ore_veinminer:veinminer"}]] run tellraw @s {"text":"Real VeinMiner enchantment: present","color":"green"}
-execute unless items entity @s weapon.mainhand *[minecraft:enchantments~[{enchantments:"ore_veinminer:veinminer"}]] run tellraw @s {"text":"Real VeinMiner enchantment: not present","color":"yellow"}
+tellraw @s {"text":"Core admin pages:","color":"gold"}
+tellraw @s [{"text":"General / Server: ","color":"white"},{"text":"/function command_suite:pages/general","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/function command_suite:pages/general"},"hover_event":{"action":"show_text","value":"Open server utility commands"}}]
+tellraw @s [{"text":"CustomDayCycle: ","color":"white"},{"text":"/function command_suite:pages/custom_day_cycle","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/function command_suite:pages/custom_day_cycle"},"hover_event":{"action":"show_text","value":"Open day cycle controls"}}]
 
-execute if entity @s[nbt={SelectedItem:{components:{"minecraft:custom_data":{ore_veinminer:1b}}}}] run tellraw @s {"text":"Stable VeinMiner marker: present","color":"green"}
-execute unless entity @s[nbt={SelectedItem:{components:{"minecraft:custom_data":{ore_veinminer:1b}}}}] run tellraw @s {"text":"Stable VeinMiner marker: not present","color":"yellow"}
+tellraw @s {"text":""}
+tellraw @s {"text":"Timber admin/debug:","color":"gold"}
+tellraw @s [{"text":"Debug Timber: ","color":"white"},{"text":"/function timber:debug","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function timber:debug"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+tellraw @s [{"text":"Give fake Timber axe: ","color":"white"},{"text":"/function timber:give/fake_diamond_axe","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function timber:give/fake_diamond_axe"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+tellraw @s [{"text":"Give plain Timber test axe: ","color":"white"},{"text":"/function timber:give/plain_diamond_axe","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function timber:give/plain_diamond_axe"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+tellraw @s [{"text":"Apply real Timber enchant manually: ","color":"white"},{"text":"/enchant @s timber:timber 1","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/enchant @s timber:timber 1"},"hover_event":{"action":"show_text","value":"Paste command"}}]
 
-tellraw @s {"text":"==============================================","color":"dark_aqua"}
+tellraw @s {"text":""}
+tellraw @s {"text":"OreVeinMiner admin/debug:","color":"gold"}
+tellraw @s [{"text":"Debug OreVeinMiner: ","color":"white"},{"text":"/function ore_veinminer:debug","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function ore_veinminer:debug"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+tellraw @s [{"text":"Debug OVM apply: ","color":"white"},{"text":"/function ore_veinminer:apply/debug","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function ore_veinminer:apply/debug"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+tellraw @s [{"text":"Give fake VeinMiner pickaxe: ","color":"white"},{"text":"/function ore_veinminer:give/fake_diamond_pickaxe","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function ore_veinminer:give/fake_diamond_pickaxe"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+tellraw @s [{"text":"Give plain VeinMiner test pickaxe: ","color":"white"},{"text":"/function ore_veinminer:give/plain_diamond_pickaxe","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function ore_veinminer:give/plain_diamond_pickaxe"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+tellraw @s [{"text":"Apply real VeinMiner enchant manually: ","color":"white"},{"text":"/enchant @s ore_veinminer:veinminer 1","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/enchant @s ore_veinminer:veinminer 1"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+
+tellraw @s {"text":""}
+tellraw @s {"text":"================================","color":"red"}
 EOF
 
 echo "Done."
 echo ""
-echo "Copy/reinstall OreVeinMiner into your world datapacks folder."
+echo "Copy/reinstall DataPackCommandSuite into your world datapacks folder."
 echo "Then run:"
 echo "  /reload"
 echo ""
-echo "Test:"
-echo "  /function ore_veinminer:apply/debug"
-echo "  /trigger ovm_apply"
+echo "Normal players:"
+echo "  /trigger dpcsuite"
+echo ""
+echo "Operators/admin:"
+echo "  /function command_suite:pages/admin"

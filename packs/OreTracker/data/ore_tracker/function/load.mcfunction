@@ -1,11 +1,4 @@
-scoreboard objectives add oretracker trigger
-scoreboard objectives add ore_toggle trigger
-scoreboard objectives add ore_show trigger
-scoreboard objectives add ore_hide trigger
-scoreboard objectives add ore_refresh trigger
-scoreboard objectives add ore_debug trigger
-
-scoreboard objectives add ore_stats dummy "OreTracker"
+scoreboard objectives add ores trigger
 
 scoreboard objectives add ot_coal minecraft.mined:minecraft.coal_ore
 scoreboard objectives add ot_deepslate_coal minecraft.mined:minecraft.deepslate_coal_ore
@@ -34,8 +27,3 @@ scoreboard objectives add ot_deepslate_emerald minecraft.mined:minecraft.deepsla
 scoreboard objectives add ot_nether_gold minecraft.mined:minecraft.nether_gold_ore
 scoreboard objectives add ot_nether_quartz minecraft.mined:minecraft.nether_quartz_ore
 scoreboard objectives add ot_ancient_debris minecraft.mined:minecraft.ancient_debris
-
-scoreboard objectives add ot_state dummy
-scoreboard players set #shown ot_state 0
-
-scoreboard objectives add ore_test trigger

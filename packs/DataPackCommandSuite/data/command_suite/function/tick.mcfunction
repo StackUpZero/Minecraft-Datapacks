@@ -8,8 +8,6 @@ function command_suite:triggers/ore_tracker/tick
 
 
 # BEGIN DPCS MANAGED TRIGGER TICKS
-function command_suite:triggers/custom_day_cycle/tick
-function command_suite:triggers/general/tick
 function command_suite:triggers/welcome_pack/tick
 function command_suite:triggers/ore_tracker/tick
 # END DPCS MANAGED TRIGGER TICKS
@@ -27,3 +25,6 @@ function command_suite:triggers/wood_cutter/tick
 
 # OreVeinMiner DPSuite trigger
 function command_suite:triggers/ore_veinminer/tick
+
+# MobKillTracker DPSuite trigger
+function command_suite:triggers/mob_kill_tracker/tick

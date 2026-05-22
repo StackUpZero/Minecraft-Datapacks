@@ -1,0 +1,1 @@
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"MobKillTracker","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_mkt"},"hover_event":{"action":"show_text","value":"Open MobKillTracker commands"}},{"text":" - show your mob kills in chat","color":"gray"}]

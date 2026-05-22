@@ -1,12 +1,11 @@
 {
   "values": [
-    "command_suite:entries/custom_day_cycle",
-    "command_suite:entries/general",
     "command_suite:entries/welcome_pack",
     "command_suite:entries/ore_tracker",
     "command_suite:entries/timber",
     "command_suite:entries/recipe_tweaks",
     "command_suite:entries/wood_cutter",
-    "command_suite:entries/ore_veinminer"
+    "command_suite:entries/ore_veinminer",
+    "command_suite:entries/mob_kill_tracker"
   ]
 }
