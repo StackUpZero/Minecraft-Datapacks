@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "PPP",
+    "PBP",
+    "PPP"
+  ],
+  "key": {
+    "P": "minecraft:diamond_pickaxe",
+    "B": "minecraft:book"
+  },
+  "result": {
+    "id": "minecraft:enchanted_book",
+    "count": 1,
+    "components": {
+      "minecraft:custom_data": {
+        "ovm_book": 1
+      },
+      "minecraft:item_name": {
+        "text": "VeinMiner Book",
+        "color": "dark_aqua",
+        "italic": false
+      },
+      "minecraft:lore": [
+        {
+          "text": "VeinMiner I",
+          "color": "gray",
+          "italic": false
+        },
+        {
+          "text": "Used to apply VeinMiner to a pickaxe.",
+          "color": "dark_aqua",
+          "italic": false
+        }
+      ],
+      "minecraft:enchantment_glint_override": true
+    }
+  }
+}

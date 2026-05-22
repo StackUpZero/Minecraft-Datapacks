@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "AAA",
+    "ABA",
+    "AAA"
+  ],
+  "key": {
+    "A": "minecraft:diamond_axe",
+    "B": "minecraft:book"
+  },
+  "result": {
+    "id": "minecraft:enchanted_book",
+    "count": 1,
+    "components": {
+      "minecraft:custom_data": {
+        "timber_book": 1
+      },
+      "minecraft:item_name": {
+        "text": "Timber Book",
+        "color": "green",
+        "italic": false
+      },
+      "minecraft:lore": [
+        {
+          "text": "Timber I",
+          "color": "gray",
+          "italic": false
+        },
+        {
+          "text": "Used to apply Timber to an axe.",
+          "color": "dark_green",
+          "italic": false
+        }
+      ],
+      "minecraft:enchantment_glint_override": true
+    }
+  }
+}

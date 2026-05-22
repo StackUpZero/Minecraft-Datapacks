@@ -1,0 +1,31 @@
+{
+  "description": {
+    "translate": "enchantment.timber.timber",
+    "fallback": "Timber"
+  },
+  "supported_items": "#minecraft:axes",
+  "weight": 3,
+  "max_level": 1,
+  "min_cost": {
+    "base": 18,
+    "per_level_above_first": 0
+  },
+  "max_cost": {
+    "base": 65,
+    "per_level_above_first": 0
+  },
+  "anvil_cost": 7,
+  "slots": [
+    "mainhand"
+  ],
+  "effects": {
+    "minecraft:tick": [
+      {
+        "effect": {
+          "type": "minecraft:run_function",
+          "function": "timber:enchant_tick"
+        }
+      }
+    ]
+  }
+}

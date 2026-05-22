@@ -1,0 +1,9 @@
+{
+  "pack": {
+    "pack_format": 102,
+    "description": "OreVeinMiner - sneak mine connected ore veins",
+    "supported_formats": [71, 102],
+    "min_format": 71,
+    "max_format": 102
+  }
+}

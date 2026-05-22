@@ -1,0 +1,1 @@
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"WoodCutter","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_wood"},"hover_event":{"action":"show_text","value":"Open WoodCutter info"}},{"text":" - stonecutter recipes for wood","color":"gray"}]

@@ -1,0 +1,1 @@
+give @s minecraft:diamond_pickaxe[minecraft:custom_data={ore_veinminer:1b},minecraft:item_name={text:"VeinMiner Pickaxe",color:"white",italic:false},minecraft:lore=[{text:"VeinMiner I",color:"gray",italic:false},{text:"Sneak while mining ores to mine connected ore veins.",color:"dark_aqua",italic:false}],minecraft:enchantment_glint_override=true]

@@ -1,0 +1,1 @@
+give @s minecraft:diamond_axe[minecraft:custom_data={timber:1b},minecraft:item_name={text:"Timber Axe",color:"white",italic:false},minecraft:lore=[{text:"Timber I",color:"gray",italic:false},{text:"Sneak while chopping logs to fell connected logs.",color:"dark_green",italic:false}],minecraft:enchantment_glint_override=true]

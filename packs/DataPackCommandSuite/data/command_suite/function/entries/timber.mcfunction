@@ -1,0 +1,1 @@
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"Timber","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_tim"},"hover_event":{"action":"show_text","value":"Open Timber apply command"}},{"text":" - apply Timber to held axe","color":"gray"}]

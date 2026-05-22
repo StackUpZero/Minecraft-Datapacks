@@ -1,0 +1,1 @@
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"RecipeTweaks","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_rec"},"hover_event":{"action":"show_text","value":"Open RecipeTweaks info"}},{"text":" - small custom recipe changes","color":"gray"}]
