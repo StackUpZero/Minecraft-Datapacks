@@ -1,1 +1,0 @@
-tellraw @s [{"text":"  • ","color":"gray"},{"text":"Travel Counter","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_travel"},"hover_event":{"action":"show_text","value":"Click to open Travel Counter commands"}},{"text":" - blocks travelled sidebar","color":"gray"}]

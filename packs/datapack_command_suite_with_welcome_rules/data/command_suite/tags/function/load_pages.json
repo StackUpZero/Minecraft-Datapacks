@@ -1,9 +1,0 @@
-{
-  "values": [
-    "command_suite:triggers/slow_day_cycle/load",
-    "command_suite:triggers/mob_kill_sidebar/load",
-    "command_suite:triggers/travel_counter/load",
-    "command_suite:triggers/general/load",
-    "command_suite:triggers/welcome_rules/load"
-  ]
-}

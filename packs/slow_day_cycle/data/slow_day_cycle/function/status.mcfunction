@@ -1,1 +1,0 @@
-tellraw @s [{"text":"Slow Day Cycle status: ","color":"yellow"},{"score":{"name":"#running","objective":"slowday_state"}},{"text":" | Accumulator: ","color":"gray"},{"score":{"name":"#acc","objective":"slowday"}}]

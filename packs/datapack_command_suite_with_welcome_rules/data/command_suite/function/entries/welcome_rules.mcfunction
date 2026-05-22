@@ -1,1 +1,0 @@
-tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"Welcome & Rules","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcsuite_welcome_rules"},"hover_event":{"action":"show_text","value":"Click to open Welcome & Rules commands"}}]

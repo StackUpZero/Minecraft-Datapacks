@@ -1,0 +1,9 @@
+{
+  "values": [
+    "command_suite:entries/custom_day_cycle",
+    "command_suite:entries/mob_kill_sidebar",
+    "command_suite:entries/travel_counter",
+    "command_suite:entries/welcome_rules",
+    "command_suite:entries/general"
+  ]
+}
