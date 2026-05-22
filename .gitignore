@@ -1,0 +1,19 @@
+# Minecraft/server junk
+logs/
+crash-reports/
+backups/
+*.log
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build/export folder
+dist/
+*.zip
+
+# Temporary files
+*.tmp
+*.bak

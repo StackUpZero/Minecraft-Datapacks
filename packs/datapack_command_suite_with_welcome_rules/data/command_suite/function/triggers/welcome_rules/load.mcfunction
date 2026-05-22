@@ -1,0 +1,1 @@
+scoreboard objectives add dpcsuite_welcome_rules trigger

@@ -1,0 +1,1 @@
+tellraw @s [{"text":"  • ","color":"gray"},{"text":"Mob Kill Sidebar","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_mobs"},"hover_event":{"action":"show_text","value":"Click to open Mob Kill Sidebar commands"}},{"text":" - per-mob kill counter sidebar","color":"gray"}]

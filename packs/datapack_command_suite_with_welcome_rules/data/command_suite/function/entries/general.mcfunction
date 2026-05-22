@@ -1,0 +1,1 @@
+tellraw @s [{"text":"  • ","color":"gray"},{"text":"General / Server","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_general"},"hover_event":{"action":"show_text","value":"Click to open general commands"}},{"text":" - reload and utility commands","color":"gray"}]

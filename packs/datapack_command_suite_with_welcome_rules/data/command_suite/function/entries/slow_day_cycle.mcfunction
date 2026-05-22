@@ -1,0 +1,1 @@
+tellraw @s [{"text":"  • ","color":"gray"},{"text":"Slow Day Cycle","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_slow"},"hover_event":{"action":"show_text","value":"Click to open Slow Day Cycle commands"}},{"text":" - custom 90-minute day/night cycle","color":"gray"}]
