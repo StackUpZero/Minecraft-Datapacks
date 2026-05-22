@@ -7,3 +7,4 @@ execute unless score initialized ovm.config matches 1.. run function ore_veinmin
 scoreboard players set initialized ovm.config 1
 scoreboard objectives add ovm_apply trigger
 scoreboard objectives add ovm.apply dummy
+scoreboard objectives add ovm.held dummy
