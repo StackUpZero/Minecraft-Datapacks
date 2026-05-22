@@ -1,9 +1,9 @@
 {
   "values": [
     "command_suite:entries/custom_day_cycle",
-    "command_suite:entries/mob_kill_sidebar",
-    "command_suite:entries/travel_counter",
-    "command_suite:entries/welcome_rules",
-    "command_suite:entries/general"
+    "command_suite:entries/general",
+    "command_suite:entries/welcome_pack",
+    "command_suite:entries/ore_tracker",
+    "command_suite:entries/deepslate_ore_doubler"
   ]
 }

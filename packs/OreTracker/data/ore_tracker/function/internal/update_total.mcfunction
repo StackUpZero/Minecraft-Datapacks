@@ -1,0 +1,20 @@
+scoreboard players set @s ores_mined 0
+scoreboard players operation @s ores_mined += @s ot_coal
+scoreboard players operation @s ores_mined += @s ot_deepslate_coal
+scoreboard players operation @s ores_mined += @s ot_copper
+scoreboard players operation @s ores_mined += @s ot_deepslate_copper
+scoreboard players operation @s ores_mined += @s ot_iron
+scoreboard players operation @s ores_mined += @s ot_deepslate_iron
+scoreboard players operation @s ores_mined += @s ot_gold
+scoreboard players operation @s ores_mined += @s ot_deepslate_gold
+scoreboard players operation @s ores_mined += @s ot_redstone
+scoreboard players operation @s ores_mined += @s ot_deepslate_redstone
+scoreboard players operation @s ores_mined += @s ot_lapis
+scoreboard players operation @s ores_mined += @s ot_deepslate_lapis
+scoreboard players operation @s ores_mined += @s ot_diamond
+scoreboard players operation @s ores_mined += @s ot_deepslate_diamond
+scoreboard players operation @s ores_mined += @s ot_emerald
+scoreboard players operation @s ores_mined += @s ot_deepslate_emerald
+scoreboard players operation @s ores_mined += @s ot_nether_gold
+scoreboard players operation @s ores_mined += @s ot_nether_quartz
+scoreboard players operation @s ores_mined += @s ot_ancient_debris

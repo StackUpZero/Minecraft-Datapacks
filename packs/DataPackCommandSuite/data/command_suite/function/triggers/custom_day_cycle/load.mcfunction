@@ -1,1 +1,1 @@
-scoreboard objectives add dpcsuite_custom_day_cycle trigger
+scoreboard objectives add dpcs_cdc trigger

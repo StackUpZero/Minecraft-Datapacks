@@ -1,0 +1,1 @@
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"WelcomePack","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_wel"},"hover_event":{"action":"show_text","value":"Open WelcomePack commands"}},{"text":" - join message and server rules","color":"gray"}]

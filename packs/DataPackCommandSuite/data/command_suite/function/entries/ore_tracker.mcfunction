@@ -1,0 +1,1 @@
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"OreTracker","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_ore"},"hover_event":{"action":"show_text","value":"Open OreTracker commands"}},{"text":" - individual ore mining scoreboard","color":"gray"}]

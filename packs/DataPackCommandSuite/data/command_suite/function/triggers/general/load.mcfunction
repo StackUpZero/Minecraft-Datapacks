@@ -1,1 +1,1 @@
-scoreboard objectives add dpcs_general trigger
+scoreboard objectives add dpcs_gen trigger

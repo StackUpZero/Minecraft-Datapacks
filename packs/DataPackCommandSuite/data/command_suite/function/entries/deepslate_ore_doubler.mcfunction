@@ -1,0 +1,1 @@
+tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"DeepSlateOreDoubler","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_deep"},"hover_event":{"action":"show_text","value":"Open DeepSlateOreDoubler info"}},{"text":" - doubled deepslate ore drops","color":"gray"}]

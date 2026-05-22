@@ -1,9 +1,9 @@
 {
   "values": [
     "command_suite:triggers/custom_day_cycle/tick",
-    "command_suite:triggers/mob_kill_sidebar/tick",
-    "command_suite:triggers/travel_counter/tick",
-    "command_suite:triggers/welcome_rules/tick",
-    "command_suite:triggers/general/tick"
+    "command_suite:triggers/general/tick",
+    "command_suite:triggers/welcome_pack/tick",
+    "command_suite:triggers/ore_tracker/tick",
+    "command_suite:triggers/deepslate_ore_doubler/tick"
   ]
 }
