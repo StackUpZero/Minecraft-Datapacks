@@ -1,169 +1,318 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Clean DPCS permissions/layout:
-# - Main DPCS becomes normal-player safe
-# - Removes CustomDayCycle + General from public DPCS menu
-# - Disables public trigger pages for CustomDayCycle + General
-# - Adds operator/admin page accessible by:
-#     /function command_suite:pages/admin
-# - Simplifies Timber/OreVeinMiner pages to apply commands only
-#
-# Run from:
-# ~/Projects/MInecraft Datapacks/packs
+BASE_DIR="$HOME/Projects/Minecraft Datapacks/packs"
+PACK_NAME="CustomDayCylce"
+PACK_DIR="$BASE_DIR/$PACK_NAME"
+NS="custom_day_cycle"
 
-DPCSUITE="DataPackCommandSuite"
+echo "Rebuilding $PACK_NAME from scratch..."
 
-echo "Splitting DPCS into normal and admin command pages..."
-
-if [[ ! -d "$DPCSUITE/data/command_suite" ]]; then
-  echo "ERROR: Missing $DPCSUITE/data/command_suite"
-  echo "Run from: ~/Projects/MInecraft Datapacks/packs"
-  exit 1
+# Backup old broken pack
+if [ -d "$PACK_DIR" ]; then
+  BACKUP="$BASE_DIR/${PACK_NAME}_backup_$(date +%Y%m%d_%H%M%S)"
+  mv "$PACK_DIR" "$BACKUP"
+  echo "Old pack moved to:"
+  echo "  $BACKUP"
 fi
 
-mkdir -p \
-  "$DPCSUITE/data/command_suite/function/pages" \
-  "$DPCSUITE/data/command_suite/function/entries" \
-  "$DPCSUITE/data/command_suite/tags/function"
+# Create folders
+mkdir -p "$PACK_DIR/data/minecraft/tags/function"
+mkdir -p "$PACK_DIR/data/$NS/function/triggers"
+mkdir -p "$PACK_DIR/data/$NS/function/internal"
 
-# -----------------------------
-# Remove admin-ish pages from public DPCS menu + trigger tags
-# -----------------------------
-
-python - <<'PY'
-import json
-from pathlib import Path
-
-remove_values = {
-    "command_suite:entries/custom_day_cycle",
-    "command_suite:entries/general",
-
-    "command_suite:triggers/custom_day_cycle/load",
-    "command_suite:triggers/custom_day_cycle/tick",
-
-    "command_suite:triggers/general/load",
-    "command_suite:triggers/general/tick",
+# pack.mcmeta
+cat > "$PACK_DIR/pack.mcmeta" <<'EOF'
+{
+  "pack": {
+    "pack_format": 81,
+    "description": "Custom 90 Minute Day Cycle with Sleep Skip"
+  }
 }
-
-files = [
-    Path("DataPackCommandSuite/data/command_suite/tags/function/menu_entries.json"),
-    Path("DataPackCommandSuite/data/command_suite/tags/function/load_pages.json"),
-    Path("DataPackCommandSuite/data/command_suite/tags/function/tick_pages.json"),
-]
-
-for path in files:
-    if not path.exists():
-        continue
-
-    data = json.loads(path.read_text())
-    data["values"] = [v for v in data.get("values", []) if v not in remove_values]
-    path.write_text(json.dumps(data, indent=2) + "\n")
-PY
-
-# Remove direct trigger calls from DPCS load/tick if present.
-for file in \
-  "$DPCSUITE/data/command_suite/function/load.mcfunction" \
-  "$DPCSUITE/data/command_suite/function/tick.mcfunction"
-do
-  if [[ -f "$file" ]]; then
-    sed -i '/command_suite:triggers\/custom_day_cycle\/load/d' "$file"
-    sed -i '/command_suite:triggers\/custom_day_cycle\/tick/d' "$file"
-    sed -i '/command_suite:triggers\/general\/load/d' "$file"
-    sed -i '/command_suite:triggers\/general\/tick/d' "$file"
-
-    sed -i '/CustomDayCycle DPSuite trigger/d' "$file"
-    sed -i '/General DPSuite trigger/d' "$file"
-  fi
-done
-
-# -----------------------------
-# Public Timber page: apply only
-# -----------------------------
-
-cat > "$DPCSUITE/data/command_suite/function/pages/timber.mcfunction" <<'EOF'
-tellraw @s {"text":""}
-tellraw @s {"text":"========== Timber ==========","color":"green","bold":true}
-tellraw @s {"text":"Apply Timber to the axe in your main hand.","color":"gray"}
-tellraw @s {"text":""}
-
-tellraw @s {"text":"Requires: Timber Book in your inventory.","color":"gray"}
-tellraw @s [{"text":"Apply Timber: ","color":"white"},{"text":"/trigger timber_apply","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger timber_apply"},"hover_event":{"action":"show_text","value":"Apply Timber to held axe"}}]
-
-tellraw @s {"text":""}
-tellraw @s [{"text":"← Back to datapack list","color":"yellow","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcsuite"},"hover_event":{"action":"show_text","value":"Click to go back"}}]
-tellraw @s {"text":"============================","color":"green"}
 EOF
 
-cat > "$DPCSUITE/data/command_suite/function/entries/timber.mcfunction" <<'EOF'
-tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"Timber","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_tim"},"hover_event":{"action":"show_text","value":"Open Timber apply command"}},{"text":" - apply Timber to held axe","color":"gray"}]
+# Tags
+cat > "$PACK_DIR/data/minecraft/tags/function/load.json" <<EOF
+{
+  "values": [
+    "$NS:load"
+  ]
+}
 EOF
 
-# -----------------------------
-# Public OreVeinMiner page: apply only
-# -----------------------------
-
-cat > "$DPCSUITE/data/command_suite/function/pages/ore_veinminer.mcfunction" <<'EOF'
-tellraw @s {"text":""}
-tellraw @s {"text":"========== OreVeinMiner ==========","color":"dark_aqua","bold":true}
-tellraw @s {"text":"Apply VeinMiner to the pickaxe in your main hand.","color":"gray"}
-tellraw @s {"text":""}
-
-tellraw @s {"text":"Requires: VeinMiner Book in your inventory.","color":"gray"}
-tellraw @s [{"text":"Apply VeinMiner: ","color":"white"},{"text":"/trigger ovm_apply","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger ovm_apply"},"hover_event":{"action":"show_text","value":"Apply VeinMiner to held pickaxe"}}]
-
-tellraw @s {"text":""}
-tellraw @s [{"text":"← Back to datapack list","color":"yellow","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcsuite"},"hover_event":{"action":"show_text","value":"Click to go back"}}]
-tellraw @s {"text":"================================","color":"dark_aqua"}
+cat > "$PACK_DIR/data/minecraft/tags/function/tick.json" <<EOF
+{
+  "values": [
+    "$NS:tick"
+  ]
+}
 EOF
 
-cat > "$DPCSUITE/data/command_suite/function/entries/ore_veinminer.mcfunction" <<'EOF'
-tellraw @s [{"text":"• ","color":"dark_gray"},{"text":"OreVeinMiner","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/trigger dpcs_ovm"},"hover_event":{"action":"show_text","value":"Open OreVeinMiner apply command"}},{"text":" - apply VeinMiner to held pickaxe","color":"gray"}]
+# Load
+cat > "$PACK_DIR/data/$NS/function/load.mcfunction" <<'EOF'
+# Custom Day Cycle - Load
+
+# Main state
+scoreboard objectives add cdc dummy
+
+# Player commands
+scoreboard objectives add cdc_start trigger
+scoreboard objectives add cdc_stop trigger
+scoreboard objectives add cdc_menu trigger
+scoreboard objectives add cdc_set_day trigger
+scoreboard objectives add cdc_set_night trigger
+scoreboard objectives add cdc_vanilla trigger
+
+# Sleep detection
+scoreboard objectives add cdc_sleep minecraft.custom:minecraft.sleep_in_bed
+scoreboard objectives add cdc_sleep_timer dummy
+
+# Defaults
+scoreboard players set #enabled cdc 1
+scoreboard players set #phase cdc 0
+scoreboard players set #phase_progress cdc 0
+scoreboard players set #acc cdc 0
+scoreboard players set #to_add cdc 0
+
+# Config
+# 90 minute full cycle:
+# Day = 45 minutes = 54000 game ticks
+# Night = 45 minutes = 54000 game ticks
+scoreboard players set #day_length cdc 54000
+scoreboard players set #night_length cdc 54000
+
+tellraw @a [{"text":"[CustomDayCylce] ","color":"gold"},{"text":"Loaded. Use /trigger cdc_menu","color":"yellow"}]
 EOF
 
-# -----------------------------
-# Admin page
-# Operator-only in practice because it is opened with /function.
-# Non-ops should not be able to run /function on a normal server.
-# -----------------------------
+# Tick
+cat > "$PACK_DIR/data/$NS/function/tick.mcfunction" <<'EOF'
+# Custom Day Cycle - Tick
 
-cat > "$DPCSUITE/data/command_suite/function/pages/admin.mcfunction" <<'EOF'
-tellraw @s {"text":""}
-tellraw @s {"text":"========== DPCS ADMIN ==========","color":"red","bold":true}
-tellraw @s {"text":"Operator/debug/cheaty commands. Open with /function command_suite:pages/admin","color":"gray"}
-tellraw @s {"text":""}
+# Enable triggers for all players
+scoreboard players enable @a cdc_start
+scoreboard players enable @a cdc_stop
+scoreboard players enable @a cdc_menu
+scoreboard players enable @a cdc_set_day
+scoreboard players enable @a cdc_set_night
+scoreboard players enable @a cdc_vanilla
 
-tellraw @s {"text":"Core admin pages:","color":"gold"}
-tellraw @s [{"text":"General / Server: ","color":"white"},{"text":"/function command_suite:pages/general","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/function command_suite:pages/general"},"hover_event":{"action":"show_text","value":"Open server utility commands"}}]
-tellraw @s [{"text":"CustomDayCycle: ","color":"white"},{"text":"/function command_suite:pages/custom_day_cycle","color":"aqua","underlined":true,"click_event":{"action":"run_command","command":"/function command_suite:pages/custom_day_cycle"},"hover_event":{"action":"show_text","value":"Open day cycle controls"}}]
+# Trigger handlers
+execute as @a[scores={cdc_menu=1..}] run function custom_day_cycle:menu
+execute as @a[scores={cdc_start=1..}] run function custom_day_cycle:triggers/start
+execute as @a[scores={cdc_stop=1..}] run function custom_day_cycle:triggers/stop
+execute as @a[scores={cdc_set_day=1..}] run function custom_day_cycle:triggers/set_day
+execute as @a[scores={cdc_set_night=1..}] run function custom_day_cycle:triggers/set_night
+execute as @a[scores={cdc_vanilla=1..}] run function custom_day_cycle:triggers/vanilla
 
-tellraw @s {"text":""}
-tellraw @s {"text":"Timber admin/debug:","color":"gold"}
-tellraw @s [{"text":"Debug Timber: ","color":"white"},{"text":"/function timber:debug","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function timber:debug"},"hover_event":{"action":"show_text","value":"Paste command"}}]
-tellraw @s [{"text":"Give fake Timber axe: ","color":"white"},{"text":"/function timber:give/fake_diamond_axe","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function timber:give/fake_diamond_axe"},"hover_event":{"action":"show_text","value":"Paste command"}}]
-tellraw @s [{"text":"Give plain Timber test axe: ","color":"white"},{"text":"/function timber:give/plain_diamond_axe","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function timber:give/plain_diamond_axe"},"hover_event":{"action":"show_text","value":"Paste command"}}]
-tellraw @s [{"text":"Apply real Timber enchant manually: ","color":"white"},{"text":"/enchant @s timber:timber 1","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/enchant @s timber:timber 1"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+scoreboard players reset @a[scores={cdc_menu=1..}] cdc_menu
+scoreboard players reset @a[scores={cdc_start=1..}] cdc_start
+scoreboard players reset @a[scores={cdc_stop=1..}] cdc_stop
+scoreboard players reset @a[scores={cdc_set_day=1..}] cdc_set_day
+scoreboard players reset @a[scores={cdc_set_night=1..}] cdc_set_night
+scoreboard players reset @a[scores={cdc_vanilla=1..}] cdc_vanilla
 
-tellraw @s {"text":""}
-tellraw @s {"text":"OreVeinMiner admin/debug:","color":"gold"}
-tellraw @s [{"text":"Debug OreVeinMiner: ","color":"white"},{"text":"/function ore_veinminer:debug","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function ore_veinminer:debug"},"hover_event":{"action":"show_text","value":"Paste command"}}]
-tellraw @s [{"text":"Debug OVM apply: ","color":"white"},{"text":"/function ore_veinminer:apply/debug","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function ore_veinminer:apply/debug"},"hover_event":{"action":"show_text","value":"Paste command"}}]
-tellraw @s [{"text":"Give fake VeinMiner pickaxe: ","color":"white"},{"text":"/function ore_veinminer:give/fake_diamond_pickaxe","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function ore_veinminer:give/fake_diamond_pickaxe"},"hover_event":{"action":"show_text","value":"Paste command"}}]
-tellraw @s [{"text":"Give plain VeinMiner test pickaxe: ","color":"white"},{"text":"/function ore_veinminer:give/plain_diamond_pickaxe","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/function ore_veinminer:give/plain_diamond_pickaxe"},"hover_event":{"action":"show_text","value":"Paste command"}}]
-tellraw @s [{"text":"Apply real VeinMiner enchant manually: ","color":"white"},{"text":"/enchant @s ore_veinminer:veinminer 1","color":"yellow","underlined":true,"click_event":{"action":"suggest_command","command":"/enchant @s ore_veinminer:veinminer 1"},"hover_event":{"action":"show_text","value":"Paste command"}}]
+# Sleep skip support
+execute as @a[scores={cdc_sleep=1..}] run scoreboard players set @s cdc_sleep_timer 1
+scoreboard players reset @a cdc_sleep
+scoreboard players add @a[scores={cdc_sleep_timer=1..}] cdc_sleep_timer 1
+execute if entity @a[scores={cdc_sleep_timer=20..}] run function custom_day_cycle:internal/sleep_skip
 
-tellraw @s {"text":""}
-tellraw @s {"text":"================================","color":"red"}
+# Run custom cycle if enabled
+execute if score #enabled cdc matches 1 run function custom_day_cycle:internal/run
 EOF
 
+# Menu
+cat > "$PACK_DIR/data/$NS/function/menu.mcfunction" <<'EOF'
+tellraw @s ["",{"text":"\n=== Custom Day Cycle ===\n","color":"gold","bold":true},{"text":"Start custom cycle","color":"green","clickEvent":{"action":"run_command","value":"/trigger cdc_start"},"hoverEvent":{"action":"show_text","contents":"Click to start custom day cycle"}},{"text":"\n"},{"text":"Stop/freeze cycle","color":"red","clickEvent":{"action":"run_command","value":"/trigger cdc_stop"},"hoverEvent":{"action":"show_text","contents":"Click to stop custom day cycle"}},{"text":"\n"},{"text":"Return to vanilla time","color":"aqua","clickEvent":{"action":"run_command","value":"/trigger cdc_vanilla"},"hoverEvent":{"action":"show_text","contents":"Click to return to vanilla daylight cycle"}},{"text":"\n"},{"text":"Set Day","color":"yellow","clickEvent":{"action":"run_command","value":"/trigger cdc_set_day"}},{"text":" | "},{"text":"Set Night","color":"dark_purple","clickEvent":{"action":"run_command","value":"/trigger cdc_set_night"}},{"text":"\n"}]
+EOF
+
+# Start
+cat > "$PACK_DIR/data/$NS/function/triggers/start.mcfunction" <<'EOF'
+scoreboard players set #enabled cdc 1
+gamerule doDaylightCycle false
+tellraw @s [{"text":"[CustomDayCylce] ","color":"gold"},{"text":"Custom 90 minute cycle started.","color":"green"}]
+EOF
+
+# Stop
+cat > "$PACK_DIR/data/$NS/function/triggers/stop.mcfunction" <<'EOF'
+scoreboard players set #enabled cdc 0
+gamerule doDaylightCycle false
+tellraw @s [{"text":"[CustomDayCylce] ","color":"gold"},{"text":"Custom cycle stopped/frozen.","color":"red"}]
+EOF
+
+# Vanilla
+cat > "$PACK_DIR/data/$NS/function/triggers/vanilla.mcfunction" <<'EOF'
+scoreboard players set #enabled cdc 0
+gamerule doDaylightCycle true
+scoreboard players set #phase cdc 0
+scoreboard players set #phase_progress cdc 0
+scoreboard players set #acc cdc 0
+scoreboard players set #to_add cdc 0
+tellraw @s [{"text":"[CustomDayCylce] ","color":"gold"},{"text":"Returned to vanilla daylight cycle.","color":"aqua"}]
+EOF
+
+# Set day
+cat > "$PACK_DIR/data/$NS/function/triggers/set_day.mcfunction" <<'EOF'
+scoreboard players set #enabled cdc 1
+gamerule doDaylightCycle false
+scoreboard players set #phase cdc 0
+scoreboard players set #phase_progress cdc 0
+scoreboard players set #acc cdc 0
+scoreboard players set #to_add cdc 0
+time set day
+tellraw @s [{"text":"[CustomDayCylce] ","color":"gold"},{"text":"Set to day.","color":"yellow"}]
+EOF
+
+# Set night
+cat > "$PACK_DIR/data/$NS/function/triggers/set_night.mcfunction" <<'EOF'
+scoreboard players set #enabled cdc 1
+gamerule doDaylightCycle false
+scoreboard players set #phase cdc 1
+scoreboard players set #phase_progress cdc 0
+scoreboard players set #acc cdc 0
+scoreboard players set #to_add cdc 0
+time set night
+tellraw @s [{"text":"[CustomDayCylce] ","color":"gold"},{"text":"Set to night.","color":"dark_purple"}]
+EOF
+
+# Main cycle runner
+cat > "$PACK_DIR/data/$NS/function/internal/run.mcfunction" <<'EOF'
+# Freeze vanilla time system
+gamerule doDaylightCycle false
+
+# Add progress
+scoreboard players add #phase_progress cdc 1
+
+# Day phase
+execute if score #phase cdc matches 0 run time set day
+execute if score #phase cdc matches 0 run function custom_day_cycle:internal/day_math
+execute if score #phase cdc matches 0 if score #phase_progress cdc >= #day_length cdc run function custom_day_cycle:internal/switch_to_night
+
+# Night phase
+execute if score #phase cdc matches 1 run time set night
+execute if score #phase cdc matches 1 run function custom_day_cycle:internal/night_math
+execute if score #phase cdc matches 1 if score #phase_progress cdc >= #night_length cdc run function custom_day_cycle:internal/switch_to_day
+EOF
+
+# Day math
+cat > "$PACK_DIR/data/$NS/function/internal/day_math.mcfunction" <<'EOF'
+# Map 0..54000 custom ticks to Minecraft day range 0..12000
+# to_add = phase_progress * 12000 / day_length
+
+scoreboard players operation #to_add cdc = #phase_progress cdc
+scoreboard players set #mul cdc 12000
+scoreboard players operation #to_add cdc *= #mul cdc
+scoreboard players operation #to_add cdc /= #day_length cdc
+
+execute store result score #dummy cdc run time set 0
+execute store result score #dummy cdc run time add 0
+time set 0
+execute store result score #dummy cdc run time add 0
+execute if score #to_add cdc matches 1.. run function custom_day_cycle:internal/add_time
+EOF
+
+# Night math
+cat > "$PACK_DIR/data/$NS/function/internal/night_math.mcfunction" <<'EOF'
+# Map 0..54000 custom ticks to Minecraft night range 13000..23000
+# to_add = 13000 + phase_progress * 10000 / night_length
+
+scoreboard players operation #to_add cdc = #phase_progress cdc
+scoreboard players set #mul cdc 10000
+scoreboard players operation #to_add cdc *= #mul cdc
+scoreboard players operation #to_add cdc /= #night_length cdc
+scoreboard players add #to_add cdc 13000
+
+time set 0
+execute if score #to_add cdc matches 1.. run function custom_day_cycle:internal/add_time
+EOF
+
+# Add time loop
+cat > "$PACK_DIR/data/$NS/function/internal/add_time.mcfunction" <<'EOF'
+# Adds #to_add ticks to the day time in chunks.
+# This avoids needing macro commands.
+
+execute if score #to_add cdc matches 1000.. run time add 1000
+execute if score #to_add cdc matches 1000.. run scoreboard players remove #to_add cdc 1000
+execute if score #to_add cdc matches 1000.. run function custom_day_cycle:internal/add_time
+
+execute if score #to_add cdc matches 100..999 run time add 100
+execute if score #to_add cdc matches 100..999 run scoreboard players remove #to_add cdc 100
+execute if score #to_add cdc matches 100..999 run function custom_day_cycle:internal/add_time
+
+execute if score #to_add cdc matches 10..99 run time add 10
+execute if score #to_add cdc matches 10..99 run scoreboard players remove #to_add cdc 10
+execute if score #to_add cdc matches 10..99 run function custom_day_cycle:internal/add_time
+
+execute if score #to_add cdc matches 1..9 run time add 1
+execute if score #to_add cdc matches 1..9 run scoreboard players remove #to_add cdc 1
+execute if score #to_add cdc matches 1..9 run function custom_day_cycle:internal/add_time
+EOF
+
+# Switch to night
+cat > "$PACK_DIR/data/$NS/function/internal/switch_to_night.mcfunction" <<'EOF'
+scoreboard players set #phase cdc 1
+scoreboard players set #phase_progress cdc 0
+scoreboard players set #acc cdc 0
+scoreboard players set #to_add cdc 0
+time set night
+EOF
+
+# Switch to day
+cat > "$PACK_DIR/data/$NS/function/internal/switch_to_day.mcfunction" <<'EOF'
+scoreboard players set #phase cdc 0
+scoreboard players set #phase_progress cdc 0
+scoreboard players set #acc cdc 0
+scoreboard players set #to_add cdc 0
+time set day
+EOF
+
+# Sleep skip
+cat > "$PACK_DIR/data/$NS/function/internal/sleep_skip.mcfunction" <<'EOF'
+# Bed sleep skip for custom cycle
+
+scoreboard players set #enabled cdc 1
+gamerule doDaylightCycle false
+
+scoreboard players set #phase cdc 0
+scoreboard players set #phase_progress cdc 0
+scoreboard players set #acc cdc 0
+scoreboard players set #to_add cdc 0
+
+scoreboard players reset @a cdc_sleep
+scoreboard players reset @a cdc_sleep_timer
+
+time set day
+weather clear
+
+tellraw @a [{"text":"[CustomDayCylce] ","color":"gold"},{"text":"Good morning.","color":"yellow"}]
+EOF
+
+# README
+cat > "$PACK_DIR/README.txt" <<'EOF'
+CustomDayCylce
+
+Commands:
+/trigger cdc_menu
+/trigger cdc_start
+/trigger cdc_stop
+/trigger cdc_vanilla
+/trigger cdc_set_day
+/trigger cdc_set_night
+
+Full cycle is 90 minutes:
+- 45 minute day
+- 45 minute night
+
+Sleeping in a bed forces the custom cycle back to morning.
+EOF
+
+echo
 echo "Done."
-echo ""
-echo "Copy/reinstall DataPackCommandSuite into your world datapacks folder."
-echo "Then run:"
-echo "  /reload"
-echo ""
-echo "Normal players:"
-echo "  /trigger dpcsuite"
-echo ""
-echo "Operators/admin:"
-echo "  /function command_suite:pages/admin"
+echo "Built:"
+echo "  $PACK_DIR"
+echo
+echo "Next:"
+echo "  1. Copy/keep this folder in your world's datapacks folder if needed."
+echo "  2. In Minecraft run: /reload"
+echo "  3. Then run: /trigger cdc_menu"
+echo
